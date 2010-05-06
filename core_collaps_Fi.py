@@ -14,7 +14,7 @@ from amuse.legacy.fi.interface import Fi
 from amuse.support.data import core
 from amuse.legacy.support import channel
 def main():
-    N=10
+    N=1024
     #convert_nbody = nbody_system.nbody_to_si(1.0*N | units.MSun, 149.5e3 | units.AU)
     
     radius = 0.0 |  nbody_system.length
@@ -26,7 +26,7 @@ def main():
     #eps = convert_nbody.to_si(eps) 
     dt=0.5 | nbody_system.time
     #dt = convert_nbody.to_si(dt)
-    tmax=10 | nbody_system.time
+    tmax=350 | nbody_system.time
     #tmax = convert_nbody.to_si(tmax)
     
     parts=MakePlummerModel(N).result
@@ -61,9 +61,11 @@ def main():
       print "time,T/V,err_E:", time,(ek/ep).number, ((ep+ek-e0)/e0).number
       #print "time,T/V,err_E:", time, ep
     #  L.append(LagrangianRadii(parts)[-1])
-      #gravity.particles.new_channel_to(parts)
+      gravity.particles.new_channel_to(parts).copy()
+      #parts = gravity.particles.copy()
       #parts = gravity.particles.copy()
       parts.savepoint(time)
+      print parts.x[0]
       storage.store(parts.previous_state())
       time=time+dt
       gravity.evolve_model(time)
@@ -71,8 +73,8 @@ def main():
       #parts_temp = gravity.particles.copy()
       #print parts_temp
     #  pickle.dump(adaas,output)
-    parts.savepoint(time)
-    storage.store(parts.previous_state())
+#    parts.savepoint(time)
+#    storage.store(parts.previous_state())
     storage.close()
     #output.close()
     
