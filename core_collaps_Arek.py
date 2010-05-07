@@ -7,6 +7,7 @@ from amuse.legacy.phiGRAPE.interface import PhiGRAPE
 from sandbox.spz.LagrangianRadii import *
 from amuse.legacy.bhtree.interface import BHTreeInterface, BHTree
 
+DEBUG = 1
 radius = 0.0 | nbody_system.length
 N = 124
 eta = 0.005
@@ -90,6 +91,7 @@ while time < tmax:
   r = []
   vesci = []
   energies = []
+  i=0
   for part in pos:
 	  rOne = numpy.sqrt((part.x.number - pos.x[0:N].number)**2 + (part.y.number - pos.y[0:N].number)**2 + 
 		  (part.z.number - pos.z[0:N].number)**2)
@@ -99,21 +101,25 @@ while time < tmax:
 	  vesci.append(numpy.sqrt(2.0 * gravity.particles.mass[0:N].number/rOne))
 	  
 	  #vjj = vj[0:N]
-	  enOne = 0.5 * (part.mass.number * vj**2 + pos.mass.number * vj**2) -\
+	  enOne = 0.5 * (part.mass.number * vj[i] * vj[i] + pos.mass[0:N].number * vj[0:N] * vj[0:N]) -\
 	  	(part.mass.number * pos.mass.number / rOne)
 	  energies.append(enOne)
+	  i=i+1
 	  
   #print "Energies finished",energies[0]
   
-  # sprawdzenie bo nie wierze
-  for i in range(0, 10):
-	  for j in range(0, 10):
-		enOne = 0.5 * (pos.mass[i].number * vj[i]**2 + pos.mass[j].number * vj[j]**2) -\
-	  		(pos.mass[i].number * pos.mass[j].number / r[i][j])
-		if (abs(enOne - energies[i][j]) > 1.0e-5):
-			print "ERROR",i,j,enOne,energies[i][j],abs(enOne - energies[i][j])
-			exit()
-
+  if (DEBUG == 1):
+	  # sprawdzenie bo nie wierze
+	  for i in range(0, 5):
+		  for j in range(0, 5):
+			rOne = numpy.sqrt((pos.x[i].number - pos.x[j].number)**2 + (pos.y[i].number - pos.y[j].number)**2 + 
+			  (pos.z[i].number - pos.z[j].number)**2)
+			enOne = 0.5 * (pos.mass[i].number * vj[i]**2 + pos.mass[j].number * vj[j]**2) -\
+				(pos.mass[i].number * pos.mass[j].number / r[i][j])
+			if (abs(enOne - energies[i][j]) > 1.0e-8):
+				print "ERROR energy ",i,j,enOne,energies[i][j],abs(enOne - energies[i][j])
+			if (abs(rOne - r[i][j]) > 1.0e-8):
+				print "ERROR r",i,j,rOne,r[i][j],abs(rOne - r[i][j])
   
 	  
 #  for i in range(0, N-1):
