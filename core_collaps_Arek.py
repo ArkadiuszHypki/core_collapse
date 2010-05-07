@@ -11,10 +11,14 @@ radius = 0.0 | nbody_system.length
 N = 124
 eta = 0.005
 etas = 0.005
-eps = 0.001 * 100.0 | nbody_system.length
+# smoothing value
+#eps = 0.001 * 100.0 | nbody_system.length
+eps = 0.001 | nbody_system.length
 dt = 0.5 | nbody_system.time
 tmax = 500.0 | nbody_system.time
-
+isBinary = numpy.zeros(N)
+epsTolerance = 1000 * eps.number
+  
 parts = MakePlummerModel(N).result
 parts.radius = radius
 
@@ -50,6 +54,8 @@ e0 = None
 from_gravity_to_model = gravity.particles.new_channel_to(parts)
 while time < tmax:
   res = []
+  binCounts = numpy.zeros(9)
+  isBinary = numpy.zeros(N)
   time = time + dt
   gravity.evolve_model(time)
   
@@ -67,33 +73,74 @@ while time < tmax:
   Lagrad = LagrangianRadii(parts, verbose=1)
   resCounter = 0
   for i in Lagrad:
-	#res.append([])
-	#res[resCounter].append(time.number)
-	#res[resCounter].append(MassFraction[resCounter].number)
 	res.append(i[0].number)
 	
 	print "time",time.number,"massFrac",MassFraction[resCounter].number,"realMass",i[1].number,"radius",i[0].number
 	resCounter = resCounter + 1
 	
-  #LagrangianRadii(gravity.particles, verbose=1)
-  
   # search for bound binaries
   i = -1
   binCount = 0
-  for i in range(0, N):
+  vj = numpy.sqrt((gravity.particles.vx[0:N].number)**2 + (gravity.particles.vy[0:N].number)**2 + 
+	  (gravity.particles.vz[0:N].number)**2)
+  vjRadius = numpy.sqrt((gravity.particles.x[0:N].number)**2 + (gravity.particles.y[0:N].number)**2 + 
+	  (gravity.particles.z[0:N].number)**2)
+  pos = gravity.particles
+  
+  r = []
+  vesci = []
+  energies = []
+  for part in pos:
+	  rOne = numpy.sqrt((part.x.number - pos.x[0:N].number)**2 + (part.y.number - pos.y[0:N].number)**2 + 
+		  (part.z.number - pos.z[0:N].number)**2)
+	  #energies = 0.5 * (gravity.particles.mass[i].number * vj[i] + gravity.particles.mass[j].number * vj[j]) -\
+		#	  	(gravity.particles.mass[i].number * gravity.particles.mass[j].number / r[i][j])
+	  r.append(rOne)
+	  vesci.append(numpy.sqrt(2.0 * gravity.particles.mass[0:N].number/rOne))
+	  
+	  #vjj = vj[0:N]
+	  enOne = 0.5 * (part.mass.number * vj**2 + pos.mass.number * vj**2) -\
+	  	(part.mass.number * pos.mass.number / rOne)
+	  energies.append(enOne)
+	  
+  #print "Energies finished",energies[0]
+  
+  # sprawdzenie bo nie wierze
+  for i in range(0, 10):
+	  for j in range(0, 10):
+		enOne = 0.5 * (pos.mass[i].number * vj[i]**2 + pos.mass[j].number * vj[j]**2) -\
+	  		(pos.mass[i].number * pos.mass[j].number / r[i][j])
+		if (abs(enOne - energies[i][j]) > 1.0e-5):
+			print "ERROR",i,j,enOne,energies[i][j],abs(enOne - energies[i][j])
+			exit()
+
+  
+	  
+#  for i in range(0, N-1):
+#	  energies.append(numpy.zeros(N))
+#	  for j in range(i + 1, N):
+#		  energies[i][j] = 0.5 * (pos.mass[i].number * vj[i] + pos.mass[j].number * vj[j]) -\
+#			  	(pos.mass[i].number * pos.mass[j].number / r[i][j])
+#  print "Energies finished"
+	  
+  for i in range(0, N-1):
+	  viRadius = vjRadius[i]
 	  for j in range(i + 1, N):
-		  # check whether star a and b are binary
-		  r = numpy.sqrt(sum((gravity.particles.position[i].number - gravity.particles.position[j].number)**2))
-		  vesci = numpy.sqrt(2.0 * gravity.particles.mass[i].number/r)
-		  vj = numpy.sqrt(sum((gravity.particles.velocity[i].number)**2))
-		  if (vj < vesci):
-			print "binaryStar i",i,"j",j,"time",time.number,"vesci",vesci,"r",r,"vj",vj
-			binCount = binCount + 1
-		  #print "r",gravity.particles.position[i].x,gravity.particles.position[i].y,gravity.particles.position[i].z
-		  #print "r",gravity.particles.position[j].x,gravity.particles.position[j].y,gravity.particles.position[j].z
-		  #print "from parts",parts[i].x.number
-		  #break
-	  #break # TODO DEBUG
+		  if ((isBinary[i] == 0) and (isBinary[j] == 0)):
+			  # check whether star a and b are binary
+			  minRadius = min(viRadius, vjRadius[j])
+			  if (vj[j] < vesci[i][j] and r[i][j] < epsTolerance and energies[i][j] < 0.0):
+				isBinary[i] = 1
+				isBinary[j] = 1
+				print "binaryStar i",i,"j",j,"time",time.number,"vesci",vesci[i][j],"r",r[i][j],"vj",vj[j]
+				binCount = binCount + 1
+				# put binary to specific lagrangian radius
+				k = 0
+				for m in Lagrad:
+					if (minRadius < m[0].number):
+						binCounts[k] = binCounts[k] + 1
+					k = k + 1
+				
   
   # save binary count
   print "time",time.number,"binCount",binCount
@@ -102,11 +149,10 @@ while time < tmax:
   # save to file
   for i in xrange(len(res)):
 	  DAT.write(str(res[i]) + "  ")
+  for i in xrange(len(binCounts)):
+	  DAT.write(str(binCounts[i]) + "  ")
   DAT.write("\n")
-  #numpy.savetxt('core_collapse_dat', res)
-  
-  #break # TODO DEBUG break after one loop
-  
+    
 # print results
 print "res",res
 
