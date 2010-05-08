@@ -19,13 +19,13 @@ def main():
     
     radius = 0.0 |  nbody_system.length
     #radius = convert_nbody.to_si(radius)
-    eta=0.25 | nbody_system.time
+    eta=1/32. | nbody_system.time
     #eta = convert_nbody.to_si(eta) 
-    eps=0.005 | nbody_system.length
+    eps=0.001 | nbody_system.length
     #eps = convert_nbody.to_si(eps) 
     dt=0.5 | nbody_system.time
     #dt = convert_nbody.to_si(dt)
-    tmax=10 | nbody_system.time
+    tmax=350 | nbody_system.time
     #tmax = convert_nbody.to_si(tmax)
     
     parts=MakePlummerModel(N).result
@@ -35,8 +35,14 @@ def main():
     gravity.initialize_code()
     gravity.parameters.epsilon_squared = eps**2
     gravity.parameters.timestep = eta
+    gravity.legacy_interface.set_gdgtol(0.001)
+    gravity.legacy_interface.set_gdgop(0)
+    gravity.legacy_interface.set_usequad(0)
+    gravity.legacy_interface.set_acc_tstp(0)
     gravity.legacy_interface.set_bh_tol(0.5)
     gravity.legacy_interface.set_tstpcr2(0.025)
+    gravity.legacy_interface.set_sqrttstp(0)
+    gravity.legacy_interface.set_tstepcrit(0.25)
     #gravity.parameters.initial_timestep_parameter=etas 
     gravity.commit_parameters()
     gravity.particles.add_particles(parts)
