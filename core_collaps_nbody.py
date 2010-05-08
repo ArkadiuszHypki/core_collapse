@@ -11,15 +11,25 @@ import pickle
 import os
 
 radius = 0.0 |  nbody_system.length
-N=10
+N=1024
 eta=0.005
 etas=0.005
 eps=0.001 | nbody_system.length
 dt=0.5 | nbody_system.time
-tmax=10 | nbody_system.time
+tmax=500 | nbody_system.time
 
 
 parts=MakePlummerModel(N).result
+#Mass segregation
+N2 = 82
+x = 1.25
+N1 = N-N2
+m1 = 1/(N1+x*N2)
+m2 = x*m1
+M1 = numpy.zeros((N1,1)) + (m1)
+M2 = numpy.zeros((N2,1)) + (m2)
+M = numpy.concatenate((M1,M2))
+parts.mass = nbody_system.mass.new_quantity(numpy.hstack(M))
 parts.radius=radius
 
 gravity=PhiGRAPE()#(mode="gpu")
