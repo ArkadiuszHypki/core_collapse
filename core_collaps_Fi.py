@@ -15,6 +15,9 @@ from amuse.support.data import core
 from amuse.legacy.support import channel
 def main():
     N=1024
+    N2 = 0
+    x = 1.25
+
     #convert_nbody = nbody_system.nbody_to_si(1.0*N | units.MSun, 149.5e3 | units.AU)
     
     radius = 0.0 |  nbody_system.length
@@ -30,6 +33,15 @@ def main():
     
     parts=MakePlummerModel(N).result
     parts.radius=radius
+    #Mass segregation
+    if N2 >0:
+     N1 = N-N2
+     m1 = 1/(N1+x*N2)
+     m2 = x*m1
+     M1 = numpy.zeros((N1,1)) + (m1)
+     M2 = numpy.zeros((N2,1)) + (m2)
+     M = numpy.concatenate((M1,M2))
+
     #gravity = Fi(convert_nbody)
     gravity = Fi()
     gravity.initialize_code()
