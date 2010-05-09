@@ -41,7 +41,7 @@ def main():
      M1 = numpy.zeros((N1,1)) + (m1)
      M2 = numpy.zeros((N2,1)) + (m2)
      M = numpy.concatenate((M1,M2))
-
+     parts.mass = nbody_system.mass.new_quantity(numpy.hstack(M))
     #gravity = Fi(convert_nbody)
     gravity = Fi()
     gravity.initialize_code()
