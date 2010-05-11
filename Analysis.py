@@ -25,8 +25,8 @@ def get_LagrangianRadii(Stars):
 def get_time(Stars):
     t = []
     for stars in Stars:
-        t.append(stars.get_timestamp())
-    return numpy.array(t.number)
+        t.append(stars.get_timestamp().number)
+    return numpy.array(t)
  
 def load_dir(dir,format='tsf'):
     print "H" 
