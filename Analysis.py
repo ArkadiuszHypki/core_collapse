@@ -26,7 +26,7 @@ def get_time(Stars):
     t = []
     for stars in Stars:
         t.append(stars.get_timestamp())
-    return numpy.array(t)
+    return numpy.array(t.number)
  
 def load_dir(dir,format='tsf'):
     print "H" 
@@ -77,3 +77,8 @@ def plot_stars(S1,S2):
     pyplot.hold(False)
     for s1,s2 in zip(S1,S2):
         pyplot.plot(s1.x.number,s1.y.number,'x',s2.x.number,s2.y.number,'o')
+        
+def plot_L(L,t):
+    pyplot.semilogy(t/2**(1.5),L[:,[4,5,6]])
+    pyplot.xlabel('$t/t_D')
+    pyplot.ylabel('L [0.1,0.25.0.5]')
